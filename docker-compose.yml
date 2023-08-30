@@ -1,0 +1,29 @@
+version: '3'
+services:
+  db:
+    image: mysql:8.0
+    platform: linux/x86_64
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: development
+      TZ: "Asia/Tokyo"
+    ports:
+      - "3309:3306"
+    volumes:
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/logs:/var/log/mysql
+
+  web:
+    build: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3001 -b '0.0.0.0'"
+    environment:
+      - RAILS_DB_HOST=db
+    volumes:
+      - ./web:/myapp
+      - /myapp/tmp
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
